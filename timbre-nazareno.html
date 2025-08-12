@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timbre Digital - Inst: Nazareno</title>
+  <style>
+    /* Estilos generales */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #1e5128, #2d8a3e);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1024px;
+    }
+
+    /* Estilos para el reloj 3D */
+    @font-face {
+      font-family: "Digital-7";
+      src: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/184191/Digital-7.eot?#iefix") format("embedded-opentype"),
+        url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/184191/Digital-7.woff") format("woff"),
+        url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/184191/Digital-7.ttf") format("truetype"),
+        url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/184191/Digital-7.svg#Digital-7") format("svg");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    .face {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      -webkit-transform-origin: center;
+      transform-origin: center;
+      background: #000;
+      text-align: center;
+    }
+
+    .face p {
+      font-size: 180px;
+      font-family: "Digital-7", monospace;
+      margin-top: 20px;
+      color: #2982ff;
+      text-shadow: 0px 0px 5px #000;
+      -webkit-animation: color 10s infinite;
+      animation: color 10s infinite;
+      line-height: 180px;
+    }
+
+    .front {
+      -webkit-transform: translate3d(0, 0, 105px);
+      transform: translate3d(0, 0, 105px);
+      background: #111;
+    }
+
+    .left {
+      -webkit-transform: rotateY(-90deg) translate3d(0, 0, 105px);
+      transform: rotateY(-90deg) translate3d(0, 0, 105px);
+      background: #151515;
+    }
+
+    .top {
+      -webkit-transform: rotateX(90deg) translate3d(0, 0, 105px);
+      transform: rotateX(90deg) translate3d(0, 0, 105px);
+      background: #222;
+    }
+
+    @keyframes color {
+      0% {
+        color: #2982ff;
+        text-shadow: 0px 0px 5px #000;
+      }
+      50% {
+        color: #cc4343;
+        text-shadow: 0px 0px 5px #ff0000;
+      }
+    }
+
+    /* Estilos para el timbre digital */
+    .timbre-digital {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .timbre-content {
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+
+    .horarios-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.25rem;
+      padding: 0.5rem;
+      background-color: rgba(23, 37, 84, 0.8);
+      overflow-x: auto;
+      font-size: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .horarios-grid {
+        grid-template-columns: repeat(3, 1fr);
+        font-size: 0.875rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .horarios-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .horario-item {
+      white-space: nowrap;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .horario-actual {
+      background-color: #2563eb;
+      font-weight: bold;
+    }
+
+    .control-sonido {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.25rem 1rem;
+      background-color: rgba(30, 58, 138, 0.5);
+    }
+
+    .volumen-control {
+      display: flex;
+      align-items: center;
+    }
+
+    .volumen-control span {
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+    }
+
+    .volumen-control input[type="range"] {
+      width: 6rem;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-small {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-blue {
+      background-color: #1d4ed8;
+      color: white;
+    }
+
+    .btn-blue:hover {
+      background-color: #2563eb;
+    }
+
+    .btn-red {
+      background-color: #dc2626;
+      color: white;
+    }
+
+    .btn-red:hover {
+      background-color: #ef4444;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover {
+      opacity: 0.8;
+    }
+
+    .form-nuevo-horario {
+      padding: 0.5rem 1rem;
+      background-color: rgba(30, 58, 138, 0.5);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .form-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 0.25rem 0.75rem;
+      background-color: #172554;
+      border: 1px solid #1e40af;
+      border-radius: 0.25rem;
+      color: white;
+      font-size: 0.875rem;
+    }
+
+    .institucion-header {
+      text-align: center;
+      padding: 1rem 0;
+      background: linear-gradient(to right, rgba(23, 37, 84, 0.8), rgba(30, 58, 138, 0.8), rgba(23, 37, 84, 0.8));
+    }
+
+    .institucion-nombre {
+      font-size: 2.25rem;
+      font-weight: bold;
+      font-family: serif;
+      letter-spacing: 0.05em;
+    }
+
+    @media (min-width: 768px) {
+      .institucion-nombre {
+        font-size: 3.75rem;
+      }
+    }
+
+    .reloj-container {
+      position: relative;
+      background-color: rgba(30, 58, 138, 0.5);
+      padding: 1rem;
+    }
+
+    .reloj-3d {
+      width: 100%;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reloj-cube {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      transform-style: preserve-3d;
+      transform: rotateX(-35deg) rotateY(45deg);
+      transition: transform 1s;
+    }
+
+    .reloj-cube:hover {
+      transform: rotateX(-50deg) rotateY(45deg);
+    }
+
+    .fecha-actual {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #d1d5db;
+    }
+
+    .sonido-actual {
+      background-color: rgba(30, 64, 175, 0.8);
+      padding: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sonido-info {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .botones-footer {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1.5rem;
+      background-color: rgba(30, 58, 138, 0.5);
+    }
+
+    .boton-footer {
+      padding: 0.5rem 1.5rem;
+      font-size: 1.25rem;
+      font-weight: bold;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .boton-footer:hover {
+      color: #fde047;
+    }
+
+    .pie-pagina {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      color: #d1d5db;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-content {
+      background-color: #1e40af;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 28rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-title {
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    .modal-close {
+      color: #9ca3af;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+
+    .modal-close:hover {
+      color: white;
+    }
+
+    .modal-form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-label {
+      display: block;
+      color: #d1d5db;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: #172554;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid #1e40af;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-modal {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-success {
+      background-color: #16a34a;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    .btn-cancel {
+      background-color: #4b5563;
+      color: white;
+    }
+
+    .btn-cancel:hover {
+      background-color: #374151;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* Animación del coche */
+    .car-animation {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      box-sizing: border-box;
+      --black: #1a1c20;
+      --white: #fff;
+      --green: #00c380;
+      --d-green: #019b66;
+      --gray: #c1c1c1;
+      --l-gray: #c4c4c4;
+      --m-gray: #373838;
+      --d-gray: #282724;
+      --d-blue: #202428;
+      --orange: #ef6206;
+      --yellow: #dfa500;
+      --l-yellow: #deb953;
+      --light: #fbfbfb;
+      --n-road: -4em;
+      --p-road: 7em;
+      background-color: var(--green);
+      margin: 0;
+      height: 100%;
+      display: flex;
+      overflow: hidden;
+      align-items: center;
+      justify-content: center;
+      background-repeat: no-repeat;
+      animation: car 3.5s cubic-bezier(0.57, 0.63, 0.49, 0.65) infinite;
+      border-radius: 0.5rem;
+      /* ===rubber-l */
+      background-image: radial-gradient(circle at 49% 117%, var(--black) 37%, transparent 38%),
+        radial-gradient(circle at -24% 50%, var(--white) 31%, transparent 49%),
+        radial-gradient(2.95em 2.5em at 52% 1.2%, var(--black) 37%, transparent 38%),
+        radial-gradient(2.95em 2.5em at 52% 1.2%, var(--black) 37%, transparent 38%),
+        linear-gradient(var(--black) 100%, transparent 0), /* rubber-l=== */ /* ===rubber-r */
+        radial-gradient(circle at 49% 117%, var(--black) 37%, transparent 38%),
+        radial-gradient(circle at 124% 50%, var(--white) 31%, transparent 49%),
+        radial-gradient(2.95em 2.5em at 48% 1.2%, var(--black) 37%, transparent 38%),
+        radial-gradient(2.95em 2.5em at 48% 1.2%, var(--black) 37%, transparent 38%),
+        linear-gradient(var(--black) 100%, transparent 0), /* rubber-r=== */ /* ===shadow */
+        linear-gradient(var(--d-green) 100%, transparent 0);
+      /* shadow=== */
+
+      /* ===rubber-l */
+      background-size: 2.5em 2.5em, 0.7em 0.6em, 2.5em .9em, 2.5em .9em, 1.95em 3.9em, /* rubber-l=== */ /* ===rubber-r */
+        2.5em 2.5em, 0.7em 0.6em, 2.5em .9em, 2.5em .9em, 1.95em 3.9em, /* rubber-r=== */ /* ===shadow */
+        13em .9em;
+      /* shadow=== */
+
+      /* ===rubber-l */
+      background-position:
+        calc(50% - 6.4em) calc(50% - 1.7em),
+        calc(50% - 5.26em) calc(50% - -3.4em),
+        calc(50% - 6.5em) calc(50% - -3.8em),
+        calc(50% - 4.3em) calc(50% - -3.2em),
+        calc(50% - 6.58em) calc(50% - -1.5em),
+        /* rubber-l=== */
+
+        /* ===rubber-r */
+        calc(50% - -6.45em) calc(50% - 1.7em),
+        calc(50% - -5.26em) calc(50% - -3.4em),
+        calc(50% - -6.5em) calc(50% - -3.8em),
+        calc(50% - -4.3em) calc(50% - -3.2em),
+        calc(50% - -6.58em) calc(50% - -1.5em),
+        /* rubber-r=== */
+
+        /* ===shadow */
+        center calc(50% - -3.8em);
+      /* shadow=== */
+    }
+
+    .car-animation::before,
+    .car-animation::after {
+      content: " ";
+      position: absolute;
+    }
+
+    .car-animation::before {
+      width: 15.5em;
+      height: 62.9em;
+      top: calc(50% - 26.2em);
+      background-size: 24.6% 491%;
+      background-repeat: no-repeat;
+      background-position: center 0;
+      animation: line 1.5s infinite linear, move-road 3.5s infinite linear;
+      transform: perspective(311px) rotateX(83deg) translate3d(var(--n-road), -11.975em, 0);
+      background-image: repeating-linear-gradient(
+        to top,
+        var(--white),
+        var(--white) 4.6%,
+        transparent 0,
+        transparent 13.01%
+      );
+    }
+
+    .car-animation::after {
+      width: 15.2em;
+      height: 13.2em;
+      top: calc(50% - 8.8em);
+      left: calc(50% - 7.55em);
+      background-repeat: no-repeat;
+      animation: light 1s linear infinite, shake 3.5s linear infinite;
+
+      /* ===ceiling */
+      background-image:
+        radial-gradient(58em 20em at 50% 215%, transparent 20%, var(--white) 20.5%, var(--white) 20.8%, var(--green) 21.5%),
+        /* ceiling=== */
+
+        /* ===antenna */
+        radial-gradient(circle at center 100%, var(--black) 30%, transparent 0),
+        /* antenna=== */
+
+        /* ===antenna */
+        linear-gradient(var(--white) 100%, transparent 0),
+        /* antenna=== */
+
+        /* ===glass-l */
+        radial-gradient(17.8em 37em at 70% 240%, var(--black) 30%, transparent 30.5%),
+        /* glass-l=== */
+
+        /* ===glass-r */
+        radial-gradient(17.8em 37em at 31% 240%, var(--black) 30%, transparent 30.5%),
+        /* glass-r=== */
+
+        /* ===light */
+        radial-gradient(circle, var(--light) 48%, var(--black) 52%, var(--black) 59%, transparent 62%),
+        /* light=== */
+
+        /* ===light */
+        radial-gradient(circle, var(--light) 48%, var(--black) 52%, var(--black) 59%, transparent 62%),
+        /* light=== */
+
+        /* ===hood-ro */
+        radial-gradient(1em 1em at 102% 100%, var(--m-gray) 28%, #f3f3f3 30%),
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        radial-gradient(1em 1em at 97% -7%, var(--m-gray) 28%, var(--l-gray) 30%),
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        radial-gradient(1em 1em at -6% 102%, var(--m-gray) 28%, #efefef 30%),
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        radial-gradient(1em 1em at -6% -1%, var(--m-gray) 28%, var(--l-gray) 30%),
+        /* hood-ro=== */
+
+        /* ===hood-f */
+        linear-gradient(to top, var(--m-gray) 50%, var(--d-gray) 0, var(--d-gray) 58%, var(--m-gray) 0),
+        /* hood-f=== */
+
+        /* ===hood-e */
+        linear-gradient(to top, var(--l-gray) 30%, var(--white) 100%, transparent 0),
+        /* hood-e=== */
+
+        /* ===hood-l */
+        radial-gradient(16.4em 30.1em at 209% 333%, var(--white) 30%, transparent 30.2%),
+        /* hood-l=== */
+
+        /* ===hood-r */
+        radial-gradient(16.4em 30.1em at -109% 333%, var(--white) 30%, transparent 30.2%),
+        /* hood-r=== */
+
+        /* ===hood-o */
+        linear-gradient(var(--gray) 100%, transparent 0),
+        /* hood-o=== */
+
+        /* ===hood */
+        linear-gradient(var(--white) 100%, transparent 0),
+        /* hood=== */
+
+        /* ===mirror */
+        radial-gradient(6.7em 2.5em at 154% 8%, var(--black) 30%, transparent 33%),
+        /* mirror=== */
+
+        /* ===mirror */
+        radial-gradient(6.7em 2.5em at -53% 8%, var(--black) 30%, transparent 33%),
+        /* mirror=== */
+
+        /* ===guide-l */
+        linear-gradient(var(--orange) 100%, transparent 0),
+        /* guide-l=== */
+
+        /* ===guide-r */
+        linear-gradient(var(--orange) 100%, transparent 0),
+        /* guide-r=== */
+
+        /* ===plaque */
+        linear-gradient(var(--yellow) 100%, transparent 0),
+        /* plaque=== */
+
+        /* ===plaque */
+        linear-gradient(var(--l-yellow) 100%, transparent 0),
+        /* plaque=== */
+
+        /* ===bumper */
+        linear-gradient(var(--d-blue) 100%, transparent 0),
+        /* bumper=== */
+
+        /* ===bumper-l */
+        radial-gradient(circle at 124% 39%, var(--d-blue) 60%, transparent 64%),
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        radial-gradient(circle at -44% 39%, var(--d-blue) 60%, transparent 64%),
+        /* bumper-r=== */
+
+        /* ===bumper-d */
+        radial-gradient(13.2em 2em at 50% 59%, var(--l-gray) 96%, transparent 100%),
+        /* bumper-d=== */
+
+        /* ===bumper-l */
+        radial-gradient(1.6em 1.6em at 75% -9%, var(--l-gray) 60%, transparent 64%),
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        radial-gradient(1.6em 1.6em at 15% -9%, var(--l-gray) 60%, transparent 64%),
+        /* bumper-r=== */
+
+        /* ===floor */
+        linear-gradient(var(--d-blue) 100%, transparent 0),
+        /* floor=== */
+
+        /* ===floor-l */
+        radial-gradient(6.9em 4.6em at 295% 3%, var(--d-blue) 30%, transparent 31%),
+        /* floor-l=== */
+
+        /* ===floor-r */
+        radial-gradient(6.9em 4.6em at -189% 3%, var(--d-blue) 30%, transparent 31%);
+      /* floor-r=== */
+
+      /*=== ceiling */
+      background-size:
+        61.5% 20%,
+        /* ceiling=== */
+
+        /* ===antenna */
+        5% 6%,
+        /* antenna=== */
+
+        /*=== antenna */
+        .4% 39%,
+        /* antenna=== */
+
+        /* ===glass-l */
+        60% 30%,
+        /* glass-l=== */
+
+        /* ===glass-r */
+        60% 30%,
+        /* glass-r=== */
+
+        /* ===light */
+        16% 16%,
+        /* light=== */
+
+        /* ===light */
+        16% 16%,
+        /* light=== */
+
+        /* ===hood-ro */
+        2.4% 2%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        2.4% 2.3%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        2.4% 2.3%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        2.4% 2.3%,
+        /* hood-ro=== */
+
+        /* ===hood-f */
+        91% 12%,
+        /* hood-f=== */
+
+        /* ===hood-e */
+        93.9% 17%,
+        /* hood-e=== */
+
+        /* ===hood-l */
+        12% 17.5%,
+        /* hood-l=== */
+
+        /* ===hood-r */
+        12% 17.5%,
+        /* hood-r=== */
+
+        /* ===hood-o */
+        38% 1.1%,
+        /* hood-o=== */
+
+        /* ===hood */
+        77% 25%,
+        /* hood=== */
+
+        /* ===mirror */
+        9% 30%,
+        /* mirror=== */
+
+        /* ===mirror */
+        9% 30%,
+        /* mirror=== */
+
+        /* ===guide-l */
+        8.4% 3%,
+        /* guide-l=== */
+
+        /* ===guide-r */
+        8.4% 3%,
+        /* guide-r=== */
+
+        /* ===plaque */
+        33% 6.5%,
+        /* plaque=== */
+
+        /* ===plaque */
+        36% 9%,
+        /* plaque=== */
+
+        /* ===bumper */
+        87% 30%,
+        /* bumper=== */
+
+        /* ===bumper-l */
+        10% 12%,
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        10% 12%,
+        /* bumper-r=== */
+
+        /* ===bumper-d */
+        78% 35%,
+        /* bumper-d=== */
+
+        /* ===bumper-l */
+        11% 8%,
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        11% 8%,
+        /* bumper-r=== */
+
+        /* ===floor */
+        68% 8%,
+        /* floor=== */
+
+        /* ===floor-l */
+        5% 7%,
+        /* floor-l=== */
+
+        /* ===floor-r */
+        5% 7%;
+      /* floor-r=== */
+
+      /*=== ceiling */
+      background-position:
+        50.5% 0,
+        /* ceiling=== */
+
+        /* ===antenna */
+        90% 37%,
+        /* antenna=== */
+
+        /*=== antenna */
+        88% 1.2%,
+        /* antenna=== */
+
+        /* ===glass-l */
+        0 11.7%,
+        /* glass-l=== */
+
+        /* ===glass-r */
+        100% 11.7%,
+        /* glass-r=== */
+
+        /* ===light */
+        5% 63%,
+        /* light=== */
+
+        /* ===light */
+        95% 63%,
+        /* light=== */
+
+        /* ===hood-ro */
+        4.1% 55.7%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        4.1% 65.9%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        95.8% 55.7%,
+        /* hood-ro=== */
+
+        /* ===hood-ro */
+        95.8% 65.8%,
+        /* hood-ro=== */
+
+        /* ===hood-f */
+        center 62%,
+        /* hood-f=== */
+
+        /* ===hood-e */
+        49% 63.6%,
+        /* hood-e=== */
+
+        /* ===hood-l */
+        3.4% 46.2%,
+        /* hood-l=== */
+
+        /* ===hood-r */
+        96.5% 46.2%,
+        /* hood-r=== */
+
+        /* ===hood-o */
+        center 40.9%,
+        /* hood-o=== */
+
+        /* ===hood */
+        center 50.3%,
+        /* hood=== */
+
+        /* ===mirror */
+        5.7% 48.6%,
+        /* mirror=== */
+
+        /* ===mirror */
+        95% 48.6%,
+        /* mirror=== */
+
+        /* ===guide-l */
+        5% 75.2%,
+        /* guide-l=== */
+
+        /* ===guide-r */
+        95% 75.2%,
+        /* guide-r=== */
+
+        /* ===plaque */
+        51% 86%,
+        /* plaque=== */
+
+        /* ===plaque */
+        51.5% 87.3%,
+        /* plaque=== */
+
+        /* ===bumper */
+        center 71.9%,
+        /* bumper=== */
+
+        /* ===bumper-l */
+        -0.8% 77.8%,
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        101.7% 77.8%,
+        /* bumper-r=== */
+
+        /* ===bumper-d */
+        center 80.2%,
+        /* bumper-d=== */
+
+        /* ===bumper-l */
+        4% 85.9%,
+        /* bumper-l=== */
+
+        /* ===bumper-r */
+        97% 85.9%,
+        /* bumper-r=== */
+
+        /* ===floor */
+        center 92.5%,
+        /* floor=== */
+
+        /* ===floor-l */
+        11.7% 92.6%,
+        /* floor-l=== */
+
+        /* ===floor-r */
+        88.3% 92.6%;
+      /* floor-r=== */
+    }
+
+    @keyframes line {
+      100% {
+        background-position: center 100%;
+      }
+    }
+
+    @keyframes car {
+      15%,
+      23% {
+        transform: translate3d(-2.3em, 0, 0);
+      }
+      36%,
+      42% {
+        transform: translate3d(-.8em, 0, 0);
+      }
+      61%,
+      71.5% {
+        transform: translate3d(2.8em, 0, 0);
+      }
+      81%,
+      88% {
+        transform: translate3d(1.5em, 0, 0);
+      }
+    }
+
+    @keyframes move-road {
+      5.5% {
+        transform: perspective(311px) rotateX(83deg) translate3d(var(--n-road), -11.975em, 0);
+      }
+      27%,
+      51% {
+        transform: perspective(311px) rotateX(83deg) translate3d(var(--p-road), -11.975em, 0);
+      }
+      73%,
+      100% {
+        transform: perspective(311px) rotateX(83deg) translate3d(var(--n-road), -11.975em, 0);
+      }
+    }
+
+    @keyframes light {
+      0%,
+      37% {
+        --light: #fbfbfb;
+      }
+      50% {
+        --light: #f1f1f1;
+      }
+      62% {
+        --light: #fbfbfb;
+      }
+      65% {
+        --light: #f1f1f1;
+      }
+      95% {
+        --light: #fbfbfb;
+      }
+      100% {
+        --light: #f1f1f1;
+      }
+    }
+
+    @keyframes shake {
+      5%,
+      26% {
+        transform: rotate(-1.5deg);
+      }
+      33%,
+      41% {
+        transform: rotate(-.5deg);
+      }
+      48%,
+      69% {
+        transform: rotate(1.5deg);
+      }
+      80%,
+      95% {
+        transform: rotate(.5deg);
+      }
+    }
+
+    @media screen and (max-width: 36em) {
+      .car-animation {
+        transform: scale(0.5);
+      }
+
+      .car-animation::before {
+        width: 11em;
+        --n-road: -4em;
+        --p-road: 4em;
+      }
+    }
+
+    /* Iconos SVG */
+    .icon {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      stroke-width: 0;
+      stroke: currentColor;
+      fill: currentColor;
+      vertical-align: middle;
+    }
+
+    .icon-bell {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-edit {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-save {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-x {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-plus {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-trash {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-volume {
+      width: 1em;
+      height: 1em;
+    }
+
+    .icon-volume-x {
+      width: 1em;
+      height: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="timbre-digital">
+      <!-- Animación del coche como fondo -->
+      <div class="car-animation"></div>
+
+      <!-- Contenido del timbre -->
+      <div class="timbre-content">
+        <!-- Horarios en la parte superior -->
+        <div class="horarios-grid" id="horarios-container">
+          <!-- Los horarios se cargarán dinámicamente con JavaScript -->
+        </div>
+
+        <!-- Control de sonido general -->
+        <div class="control-sonido">
+          <div class="volumen-control">
+            <button id="toggle-sonido" class="btn-icon" title="Activar/Desactivar sonidos">
+              <svg class="icon icon-volume" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              </svg>
+            </button>
+            <span>Volumen:</span>
+            <input type="range" min="0" max="100" value="90" id="volumen-general">
+            <span id="volumen-valor">90%</span>
+
+            <!-- Botón para probar el sonido -->
+            <button id="probar-sonido" class="btn btn-small btn-blue" style="margin-left: 1rem;">
+              <svg class="icon icon-bell" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.25rem;">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              Probar Sonido
+            </button>
+          </div>
+
+          <!-- Botón para editar horarios -->
+          <button id="editar-horarios" class="btn-icon">
+            <svg class="icon icon-edit" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.25rem;">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Editar horarios</span>
+          </button>
+        </div>
+
+        <!-- Formulario para agregar nuevo horario (oculto inicialmente) -->
+        <div id="form-nuevo-horario" class="form-nuevo-horario" style="display: none;">
+          <input type="text" id="nuevo-hora" placeholder="00:00:00 a.m." class="form-input">
+          <input type="text" id="nuevo-descripcion" placeholder="Descripción (opcional)" class="form-input">
+          <button id="agregar-horario" class="btn btn-small btn-blue">
+            <svg class="icon icon-plus" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.25rem;">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Agregar
+          </button>
+        </div>
+
+        <!-- Nombre de la institución -->
+        <div class="institucion-header">
+          <h1 class="institucion-nombre" id="institucion-nombre">Inst: Nazareno</h1>
+        </div>
+
+        <!-- Reloj 3D -->
+        <div class="reloj-container">
+          <div class="absolute" style="top: 1rem; left: 1rem;">
+            <svg id="bell-icon" class="icon icon-bell" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1.5rem; height: 1.5rem;">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+
+          <div class="reloj-3d">
+            <div class="reloj-cube">
+              <div class="face top">
+                <p id="segundos">00</p>
+              </div>
+              <div class="face front">
+                <p id="minutos">00</p>
+              </div>
+              <div class="face left">
+                <p id="horas">12</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="fecha-actual" id="fecha-actual">
+            <!-- La fecha se cargará dinámicamente con JavaScript -->
+          </div>
+
+          <!-- Icono de edición -->
+          <button id="editar-reloj" class="btn-icon" style="position: absolute; top: 1rem; right: 1rem; color: #93c5fd;">
+            <svg class="icon icon-edit" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1.125rem; height: 1.125rem;">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Información de sonido actual (oculto inicialmente) -->
+        <div id="sonido-actual" class="sonido-actual" style="display: none;">
+          <div class="sonido-info">
+            <svg class="icon icon-bell animate-pulse" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1rem; height: 1rem; margin-right: 0.5rem; color: #fde047;">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span id="sonido-descripcion">Reproduciendo: Timbre - </span>
+          </div>
+          <button id="detener-sonido" class="btn btn-small btn-red">Detener</button>
+        </div>
+
+        <!-- Botones en la parte inferior -->
+        <div class="botones-footer">
+          <button class="boton-footer">Escritorio</button>
+          <button class="boton-footer">Salir</button>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="pie-pagina">Creado por Tecnico Oliver Avila</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para editar el reloj (oculto inicialmente) -->
+  <div id="modal-editar-reloj" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Editar Hora</h3>
+        <button id="cerrar-modal-reloj" class="modal-close">
+          <svg class="icon icon-x" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-form">
+        <div class="form-group">
+          <label class="form-label">Horas (1-12)</label>
+          <input type="text" id="editar-horas" class="form-control" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Minutos</label>
+          <input type="text" id="editar-minutos" class="form-control" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Segundos</label>
+          <input type="text" id="editar-segundos" class="form-control" maxlength="2">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="aplicar-tiempo" class="btn-modal btn-success">Aplicar</button>
+        <button id="cancelar-editar-reloj" class="btn-modal btn-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para configurar sonido (oculto inicialmente) -->
+  <div id="modal-configurar-sonido" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Configurar Sonido</h3>
+        <button id="cerrar-modal-sonido" class="modal-close">
+          <svg class="icon icon-x" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div id="sonido-info-container" class="mb-4">
+        <p class="text-sm text-gray-300 mb-2" id="sonido-horario-info">
+          Horario: 00:00:00 a.m. - Descripción
+        </p>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Sonido</label>
+        <div style="display: flex;">
+          <div style="flex: 1; background-color: #172554; color: white; padding: 0.5rem; border-radius: 0.25rem 0 0 0.25rem; border: 1px solid #1e40af;">
+            Timbre (00-ringin)
+          </div>
+          <button id="probar-sonido-horario" style="background-color: #1d4ed8; padding: 0 0.75rem; border-radius: 0 0.25rem 0.25rem 0; border: none; cursor: pointer;">
+            <svg class="icon icon-bell" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1rem; height: 1rem;">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label" id="volumen-horario-label">Volumen: 90%</label>
+        <input type="range" id="volumen-horario" min="0" max="100" value="90" style="width: 100%;">
+      </div>
+
+      <div class="modal-actions">
+        <button id="guardar-configuracion-sonido" class="btn-modal btn-success">Guardar</button>
+        <button id="cancelar-configurar-sonido" class="btn-modal btn-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Elemento de audio oculto -->
+  <audio id="audio-element" class="hidden"></audio>
+
+  <script>
+    // Estado de la aplicación
+    const state = {
+      currentTime: new Date(),
+      animate: false,
+      horarios: [],
+      editandoHorarios: false,
+      nuevoHorario: {
+        id: "",
+        hora: "",
+        descripcion: "",
+        volumen: 90
+      },
+      editandoReloj: false,
+      tiempoEditado: {
+        horas: "00",
+        minutos: "00",
+        segundos: "00"
+      },
+      editandoSonido: null,
+      sonidoActual: null,
+      volumenGeneral: 90,
+      sonidosActivados: true,
+      reproduciendo: false
+    };
+
+    // Referencias a elementos del DOM
+    const elements = {
+      horariosContainer: document.getElementById('horarios-container'),
+      toggleSonido: document.getElementById('toggle-sonido'),
+      volumenGeneral: document.getElementById('volumen-general'),
+      volumenValor: document.getElementById('volumen-valor'),
+      probarSonido: document.getElementById('probar-sonido'),
+      editarHorarios: document.getElementById('editar-horarios'),
+      formNuevoHorario: document.getElementById('form-nuevo-horario'),
+      nuevoHora: document.getElementById('nuevo-hora'),
+      nuevoDescripcion: document.getElementById('nuevo-descripcion'),
+      agregarHorario: document.getElementById('agregar-horario'),
+      institucionNombre: document.getElementById('institucion-nombre'),
+      bellIcon: document.getElementById('bell-icon'),
+      horas: document.getElementById('horas'),
+      minutos: document.getElementById('minutos'),
+      segundos: document.getElementById('segundos'),
+      fechaActual: document.getElementById('fecha-actual'),
+      editarReloj: document.getElementById('editar-reloj'),
+      sonidoActual: document.getElementById('sonido-actual'),
+      sonidoDescripcion: document.getElementById('sonido-descripcion'),
+      detenerSonido: document.getElementById('detener-sonido'),
+      modalEditarReloj: document.getElementById('modal-editar-reloj'),
+      cerrarModalReloj: document.getElementById('cerrar-modal-reloj'),
+      editarHorasInput: document.getElementById('editar-horas'),
+      editarMinutosInput: document.getElementById('editar-minutos'),
+      editarSegundosInput: document.getElementById('editar-segundos'),
+      aplicarTiempo: document.getElementById('aplicar-tiempo'),
+      cancelarEditarReloj: document.getElementById('cancelar-editar-reloj'),
+      modalConfigurarSonido: document.getElementById('modal-configurar-sonido'),
+      cerrarModalSonido: document.getElementById('cerrar-modal-sonido'),
+      sonidoHorarioInfo: document.getElementById('sonido-horario-info'),
+      volumenHorario: document.getElementById('volumen-horario'),
+      volumenHorarioLabel: document.getElementById('volumen-horario-label'),
+      probarSonidoHorario: document.getElementById('probar-sonido-horario'),
+      guardarConfiguracionSonido: document.getElementById('guardar-configuracion-sonido'),
+      cancelarConfigurarSonido: document.getElementById('cancelar-configurar-sonido'),
+      audioElement: document.getElementById('audio-element')
+    };
+
+    // Inicializar horarios de ejemplo
+    function inicializarHorarios() {
+      state.horarios = [
+        {
+          id: "1",
+          hora: "07:00:00 a.m.",
+          descripcion: "Entrada",
+          volumen: 90
+        },
+        {
+          id: "2",
+          hora: "09:30:00 a.m.",
+          descripcion: "Recreo",
+          volumen: 90
+        },
+        {
+          id: "3",
+          hora: "02:00:00 p.m.",
+          descripcion: "Almuerzo",
+          volumen: 90
+        },
+        {
+          id: "4",
+          hora: "02:30:00 p.m.",
+          descripcion: "Salida",
+          volumen: 90
+        },
+        {
+          id: "5",
+          hora: "05:30:00 p.m.",
+          descripcion: "Actividades",
+          volumen: 90
+        },
+        { id: "6", hora: "07:45:00 a.m.", descripcion: "Formación", volumen: 90 },
+        { id: "7", hora: "10:50:00 a.m.", descripcion: "Cambio de clase", volumen: 90 },
+        { id: "8", hora: "03:00:00 p.m.", descripcion: "Taller", volumen: 90 },
+        { id: "9", hora: "03:30:00 p.m.", descripcion: "Reunión", volumen: 90 },
+        { id: "10", hora: "03:55:00 p.m.", descripcion: "Cierre", volumen: 90 },
+        { id: "11", hora: "08:30:00 a.m.", descripcion: "Clase especial", volumen: 90 },
+        { id: "12", hora: "11:30:00 a.m.", descripcion: "Evaluación", volumen: 90 },
+        { id: "13", hora: "04:20:00 p.m.", descripcion: "Laboratorio", volumen: 90 },
+        { id: "14", hora: "04:45:00 p.m.", descripcion: "Deportes", volumen: 90 },
+        { id: "15", hora: "05:33:00 p.m.", descripcion: "Fin de actividades", volumen: 90 }
+      ];
+      renderizarHorarios();
+    }
+
+    // Renderizar horarios en el DOM
+    function renderizarHorarios() {
+      elements.horariosContainer.innerHTML = '';
+      state.horarios.forEach(horario => {
+        const esActual = esHoraActual(horario.hora);
+        const horarioElement = document.createElement('div');
+        horarioElement.className = `horario-item ${esActual ? 'horario-actual' : ''}`;
+        
+        if (state.editandoHorarios) {
+          horarioElement.innerHTML = `
+            <div>${horario.hora}</div>
+            <div>
+              <button class="btn-icon configurar-sonido" data-id="${horario.id}" title="Configurar sonido" style="color: #60a5fa; margin-right: 0.25rem;">
+                <svg class="icon icon-bell" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 0.875rem; height: 0.875rem;">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </button>
+              <button class="btn-icon eliminar-horario" data-id="${horario.id}" title="Eliminar horario" style="color: #f87171;">
+                <svg class="icon icon-trash" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 0.875rem; height: 0.875rem;">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+          `;
+        } else {
+          horarioElement.innerHTML = `
+            <div style="display: flex; align-items: center;">
+              ${horario.hora}
+              <svg class="icon icon-bell" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; margin-left: 0.25rem; color: #93c5fd;">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+          `;
+        }
+        
+        elements.horariosContainer.appendChild(horarioElement);
+      });
+
+      // Agregar event listeners a los botones de configurar y eliminar
+      if (state.editandoHorarios) {
+        document.querySelectorAll('.configurar-sonido').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            configurarSonido(id);
+          });
+        });
+
+        document.querySelectorAll('.eliminar-horario').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            eliminarHorario(id);
+          });
+        });
+      }
+    }
+
+    // Verificar si algún horario coincide con la hora actual
+    function esHoraActual(horaStr) {
+      const ahora = `${formatHour(state.currentTime)}:${formatTimeUnit(state.currentTime.getMinutes())}:${formatTimeUnit(
+        state.currentTime.getSeconds()
+      )} ${state.currentTime.getHours() >= 12 ? "p.m." : "a.m."}`;
+      return horaStr === ahora;
+    }
+
+    // Formatear la hora en formato 12 horas
+    function formatHour(date) {
+      let hours = date.getHours() % 12;
+      hours = hours ? hours : 12; // Convertir 0 a 12
+      return hours.toString().padStart(2, "0");
+    }
+
+    // Formatear los minutos y segundos con ceros a la izquierda
+    function formatTimeUnit(unit) {
+      return unit < 10 ? `0${unit}` : `${unit}`;
+    }
+
+    // Actualizar el reloj
+    function actualizarReloj() {
+      state.currentTime = new Date();
+      
+      // Actualizar el reloj 3D
+      let hours = state.currentTime.getHours() % 12;
+      hours = hours ? hours : 12; // Convertir 0 a 12
+      
+      elements.horas.textContent = hours.toString().padStart(2, "0");
+      elements.minutos.textContent = state.currentTime.getMinutes().toString().padStart(2, "0");
+      elements.segundos.textContent = state.currentTime.getSeconds().toString().padStart(2, "0");
+      
+      // Actualizar la fecha
+      elements.fechaActual.textContent = state.currentTime.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+      
+      // Verificar si hay que reproducir algún sonido
+      if (state.sonidosActivados && !state.reproduciendo) {
+        const horaActual = formatHour(state.currentTime);
+        const minutosActual = formatTimeUnit(state.currentTime.getMinutes());
+        const segundosActual = formatTimeUnit(state.currentTime.getSeconds());
+        const ampm = state.currentTime.getHours() >= 12 ? "p.m." : "a.m.";
+
+        const horaFormateada = `${horaActual}:${minutosActual}:${segundosActual} ${ampm}`;
+
+        const horarioCoincidente = state.horarios.find(h => h.hora === horaFormateada);
+
+        if (horarioCoincidente) {
+          reproducirSonido(horarioCoincidente);
+        }
+      }
+      
+      // Actualizar la visualización de los horarios
+      renderizarHorarios();
+    }
+
+    // Reproducir sonido
+    function reproducirSonido(horario) {
+      if (!elements.audioElement || !state.sonidosActivados) return;
+
+      // Configurar el audio
+      elements.audioElement.src = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/00-ringin-ADdrqMAfcCEY7rbYESnRZdlE5tUxOQ.wav"; // URL del sonido 00-ringin.wav
+      elements.audioElement.volume = (horario.volumen || state.volumenGeneral) / 100;
+      elements.audioElement.loop = false;
+
+      // Reproducir
+      elements.audioElement.play().catch(error => {
+        console.error("Error al reproducir el sonido:", error);
+        alert("Haz clic en cualquier parte de la página para permitir la reproducción de sonidos");
+      });
+
+      state.reproduciendo = true;
+      state.sonidoActual = horario;
+      
+      // Mostrar información del sonido
+      elements.sonidoDescripcion.textContent = `Reproduciendo: Timbre - ${horario.descripcion}`;
+      elements.sonidoActual.style.display = 'flex';
+      elements.bellIcon.classList.add('animate-pulse');
+      elements.bellIcon.style.color = '#fde047';
+    }
+
+    // Detener sonido
+    function detenerSonido() {
+      if (elements.audioElement) {
+        elements.audioElement.pause();
+        elements.audioElement.currentTime = 0;
+      }  {
+        elements.audioElement.pause();
+        elements.audioElement.currentTime = 0;
+      }
+      
+      state.reproduciendo = false;
+      state.sonidoActual = null;
+      
+      // Ocultar información del sonido
+      elements.sonidoActual.style.display = 'none';
+      elements.bellIcon.classList.remove('animate-pulse');
+      elements.bellIcon.style.color = '';
+    }
+
+    // Probar sonido
+    function probarSonido(volumen = state.volumenGeneral) {
+      if (!elements.audioElement) return;
+
+      // Configurar el audio
+      elements.audioElement.src = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/00-ringin-ADdrqMAfcCEY7rbYESnRZdlE5tUxOQ.wav"; // URL del sonido 00-ringin.wav
+      elements.audioElement.volume = volumen / 100;
+      elements.audioElement.loop = false;
+
+      // Reproducir
+      elements.audioElement.play().catch(error => {
+        console.error("Error al reproducir el sonido:", error);
+        alert("Haz clic en cualquier parte de la página para permitir la reproducción de sonidos");
+      });
+
+      state.reproduciendo = true;
+      state.sonidoActual = {
+        id: "prueba",
+        hora: "",
+        descripcion: "Prueba de sonido",
+        volumen: volumen
+      };
+      
+      // Mostrar información del sonido
+      elements.sonidoDescripcion.textContent = `Reproduciendo: Timbre - Prueba de sonido`;
+      elements.sonidoActual.style.display = 'flex';
+      elements.bellIcon.classList.add('animate-pulse');
+      elements.bellIcon.style.color = '#fde047';
+    }
+
+    // Agregar nuevo horario
+    function agregarHorario() {
+      const hora = elements.nuevoHora.value;
+      const descripcion = elements.nuevoDescripcion.value;
+      
+      if (hora) {
+        const id = Date.now().toString();
+        state.horarios.push({
+          id,
+          hora,
+          descripcion,
+          volumen: 90
+        });
+        
+        elements.nuevoHora.value = '';
+        elements.nuevoDescripcion.value = '';
+        
+        renderizarHorarios();
+      }
+    }
+
+    // Eliminar horario
+    function eliminarHorario(id) {
+      state.horarios = state.horarios.filter(h => h.id !== id);
+      renderizarHorarios();
+    }
+
+    // Configurar sonido
+    function configurarSonido(id) {
+      state.editandoSonido = id;
+      const horario = state.horarios.find(h => h.id === id);
+      
+      if (horario) {
+        elements.sonidoHorarioInfo.textContent = `Horario: ${horario.hora} - ${horario.descripcion}`;
+        elements.volumenHorario.value = horario.volumen || 90;
+        elements.volumenHorarioLabel.textContent = `Volumen: ${horario.volumen || 90}%`;
+        
+        elements.modalConfigurarSonido.style.display = 'flex';
+      }
+    }
+
+    // Guardar configuración de sonido
+    function guardarConfiguracionSonido() {
+      if (state.editandoSonido) {
+        const volumen = parseInt(elements.volumenHorario.value);
+        
+        state.horarios = state.horarios.map(h => 
+          h.id === state.editandoSonido ? { ...h, volumen } : h
+        );
+        
+        state.editandoSonido = null;
+        elements.modalConfigurarSonido.style.display = 'none';
+      }
+    }
+
+    // Abrir modal para editar reloj
+    function abrirModalEditarReloj() {
+      state.editandoReloj = true;
+      
+      let hours = state.currentTime.getHours() % 12;
+      hours = hours ? hours : 12; // Convertir 0 a 12
+      
+      state.tiempoEditado = {
+        horas: hours.toString().padStart(2, "0"),
+        minutos: state.currentTime.getMinutes().toString().padStart(2, "0"),
+        segundos: state.currentTime.getSeconds().toString().padStart(2, "0")
+      };
+      
+      elements.editarHorasInput.value = state.tiempoEditado.horas;
+      elements.editarMinutosInput.value = state.tiempoEditado.minutos;
+      elements.editarSegundosInput.value = state.tiempoEditado.segundos;
+      
+      elements.modalEditarReloj.style.display = 'flex';
+    }
+
+    // Aplicar tiempo editado
+    function aplicarTiempoEditado() {
+      const horas = parseInt(elements.editarHorasInput.value, 10);
+      const minutos = parseInt(elements.editarMinutosInput.value, 10);
+      const segundos = parseInt(elements.editarSegundosInput.value, 10);
+      
+      const nuevaFecha = new Date();
+      // Mantener AM/PM actual al editar
+      const isPM = nuevaFecha.getHours() >= 12;
+      nuevaFecha.setHours(isPM ? horas + 12 : horas);
+      nuevaFecha.setMinutes(minutos);
+      nuevaFecha.setSeconds(segundos);
+      
+      state.currentTime = nuevaFecha;
+      state.editandoReloj = false;
+      
+      elements.modalEditarReloj.style.display = 'none';
+      
+      // Actualizar el reloj inmediatamente
+      actualizarReloj();
+    }
+
+    // Validar entrada de tiempo
+    function validarEntradaTiempo(input, campo) {
+      // Validar que solo se ingresen números
+      if (!/^\d*$/.test(input.value)) {
+        input.value = input.value.replace(/\D/g, '');
+      }
+      
+      let numValor = parseInt(input.value, 10);
+      
+      // Aplicar restricciones según el campo
+      if (campo === 'horas') {
+        if (numValor > 12) numValor = 12;
+        if (numValor < 1) numValor = 1;
+      }
+      if (campo === 'minutos' || campo === 'segundos') {
+        if (numValor > 59) numValor = 59;
+      }
+      
+      // Formatear con ceros a la izquierda
+      input.value = numValor.toString().padStart(2, "0");
+    }
+
+    // Alternar estado de edición de horarios
+    function toggleEditarHorarios() {
+      state.editandoHorarios = !state.editandoHorarios;
+      
+      if (state.editandoHorarios) {
+        elements.formNuevoHorario.style.display = 'flex';
+        elements.editarHorarios.innerHTML = `
+          <svg class="icon icon-save" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.25rem;">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Guardar</span>
+        `;
+      } else {
+        elements.formNuevoHorario.style.display = 'none';
+        elements.editarHorarios.innerHTML = `
+          <svg class="icon icon-edit" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.25rem;">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>Editar horarios</span>
+        `;
+      }
+      
+      renderizarHorarios();
+    }
+
+    // Alternar estado de sonidos
+    function toggleSonidos() {
+      state.sonidosActivados = !state.sonidosActivados;
+      
+      if (state.sonidosActivados) {
+        elements.toggleSonido.innerHTML = `
+          <svg class="icon icon-volume" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+        `;
+        elements.toggleSonido.style.color = '#4ade80';
+      } else {
+        elements.toggleSonido.innerHTML = `
+          <svg class="icon icon-volume-x" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        `;
+        elements.toggleSonido.style.color = '#f87171';
+        
+        // Detener cualquier sonido en reproducción
+        if (state.reproduciendo) {
+          detenerSonido();
+        }
+      }
+    }
+
+    // Event listeners
+    function setupEventListeners() {
+      // Control de sonido
+      elements.toggleSonido.addEventListener('click', toggleSonidos);
+      
+      elements.volumenGeneral.addEventListener('input', (e) => {
+        state.volumenGeneral = parseInt(e.target.value);
+        elements.volumenValor.textContent = `${state.volumenGeneral}%`;
+      });
+      
+      elements.probarSonido.addEventListener('click', () => probarSonido());
+      
+      // Edición de horarios
+      elements.editarHorarios.addEventListener('click', toggleEditarHorarios);
+      elements.agregarHorario.addEventListener('click', agregarHorario);
+      
+      // Edición de reloj
+      elements.editarReloj.addEventListener('click', abrirModalEditarReloj);
+      elements.cerrarModalReloj.addEventListener('click', () => {
+        elements.modalEditarReloj.style.display = 'none';
+        state.editandoReloj = false;
+      });
+      elements.cancelarEditarReloj.addEventListener('click', () => {
+        elements.modalEditarReloj.style.display = 'none';
+        state.editandoReloj = false;
+      });
+      
+      elements.editarHorasInput.addEventListener('input', () => validarEntradaTiempo(elements.editarHorasInput, 'horas'));
+      elements.editarMinutosInput.addEventListener('input', () => validarEntradaTiempo(elements.editarMinutosInput, 'minutos'));
+      elements.editarSegundosInput.addEventListener('input', () => validarEntradaTiempo(elements.editarSegundosInput, 'segundos'));
+      
+      elements.aplicarTiempo.addEventListener('click', aplicarTiempoEditado);
+      
+      // Configuración de sonido
+      elements.cerrarModalSonido.addEventListener('click', () => {
+        elements.modalConfigurarSonido.style.display = 'none';
+        state.editandoSonido = null;
+      });
+      
+      elements.cancelarConfigurarSonido.addEventListener('click', () => {
+        elements.modalConfigurarSonido.style.display = 'none';
+        state.editandoSonido = null;
+      });
+      
+      elements.volumenHorario.addEventListener('input', (e) => {
+        const volumen = e.target.value;
+        elements.volumenHorarioLabel.textContent = `Volumen: ${volumen}%`;
+      });
+      
+      elements.probarSonidoHorario.addEventListener('click', () => {
+        const volumen = parseInt(elements.volumenHorario.value);
+        probarSonido(volumen);
+      });
+      
+      elements.guardarConfiguracionSonido.addEventListener('click', guardarConfiguracionSonido);
+      
+      // Detener sonido
+      elements.detenerSonido.addEventListener('click', detenerSonido);
+      
+      // Evento ended para el audio
+      elements.audioElement.addEventListener('ended', () => {
+        state.reproduciendo = false;
+        state.sonidoActual = null;
+        elements.sonidoActual.style.display = 'none';
+        elements.bellIcon.classList.remove('animate-pulse');
+        elements.bellIcon.style.color = '';
+      });
+    }
+
+    // Inicializar la aplicación
+    function init() {
+      inicializarHorarios();
+      setupEventListeners();
+      
+      // Actualizar el reloj cada segundo
+      setInterval(actualizarReloj, 1000);
+      
+      // Actualizar el reloj inmediatamente
+      actualizarReloj();
+    }
+
+    // Iniciar la aplicación cuando el DOM esté cargado
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
